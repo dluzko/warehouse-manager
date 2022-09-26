@@ -1,0 +1,31 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet id="create-blocking-table" author="Dmitry Luzko">
+        <createSequence sequenceName="blocking_id_seq" startValue="1" minValue="1" cacheSize="10"/>
+        <createTable tableName="blocking">
+            <column name="blocking_id" type="bigint">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_blocking"/>
+            </column>
+            <column name="blocking_token" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocking_reason" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocked_quantity" type="decimal">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="blocking"
+                                 baseColumnNames="product_id"
+                                 constraintName="fk_product_blocking"
+                                 referencedTableName="product"
+                                 referencedColumnNames="product_id"/>
+    </changeSet>
+</databaseChangeLog>

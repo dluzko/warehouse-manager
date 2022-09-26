@@ -1,0 +1,37 @@
+server:
+  port: 10000
+
+spring:
+  jackson:
+    default-property-inclusion : NON_NULL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/warehouse_manager
+    username: testuser
+    password: qwerty
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/db.changelog-master.xml
+  cloud:
+    stream:
+      bindings:
+        stock-out-0:
+          destination: test_1pc_be
+      kafka:
+        binder:
+          transaction:
+            producer:
+              configuration:
+                enable.idempotence: true
+                acks: all
+            transaction-id-prefix: tx-
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      security.protocol: PLAINTEXT
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
