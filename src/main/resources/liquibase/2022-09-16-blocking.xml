@@ -12,10 +12,10 @@
             <column name="blocking_token" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="product_id" type="bigint">
+            <column name="blocking_reason" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="blocking_reason" type="VARCHAR(255)">
+            <column name="product_id" type="bigint">
                 <constraints nullable="false"/>
             </column>
             <column name="blocked_quantity" type="decimal">

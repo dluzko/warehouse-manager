@@ -1,6 +1,6 @@
 package com.luzko.warehouse.web.controller;
 
-import com.luzko.warehouse.dto.BlockProductRequestDto;
+import com.luzko.warehouse.dto.BlockingRequestDto;
 import com.luzko.warehouse.dto.ProductRequestDto;
 import com.luzko.warehouse.dto.ProductResponseDto;
 import com.luzko.warehouse.service.ProductService;
@@ -40,25 +40,25 @@ public class ProductController {
 
     @PostMapping("/products/block")
     public ResponseEntity<List<ProductResponseDto>> blockProduct(
-            @Valid @RequestBody List<BlockProductRequestDto> blockProductRequestDtos) {
+            @Valid @RequestBody List<BlockingRequestDto> blockingRequestDtos) {
         final var response =
-                productService.updateProducts(true, blockProductRequestDtos);
+                productService.updateProducts(true, blockingRequestDtos);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/products/unblock")
     public ResponseEntity<List<ProductResponseDto>> unblockProduct(
-            @Valid @RequestBody List<BlockProductRequestDto> blockProductRequestDtos) {
+            @Valid @RequestBody List<BlockingRequestDto> blockingRequestDtos) {
         final var response =
-                productService.updateProducts(false, blockProductRequestDtos);
+                productService.updateProducts(false, blockingRequestDtos);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/products/depart")
     public ResponseEntity<List<ProductResponseDto>> departProduct(
-            @Valid @RequestBody List<BlockProductRequestDto> blockProductRequestDtos) {
+            @Valid @RequestBody List<BlockingRequestDto> blockingRequestDtos) {
         final var response =
-                productService.departProducts(blockProductRequestDtos);
+                productService.departProducts(blockingRequestDtos);
         return ResponseEntity.ok(response);
     }
 }

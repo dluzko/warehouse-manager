@@ -19,13 +19,13 @@ public class ProductRequestDto {
     private String productCode;
     @NotEmpty(message = "Name should not be empty")
     @Pattern(regexp = "[A-Za-z\\d]{2,30}$")
-//    @Size(min = 2, max = 30, message = "Name should be between 2 and 30 characters")
     private String name;
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Measure unit should not be empty")
     private MeasureUnit measureUnit;
-    @NotNull(message = "quantity should not be empty")
+    @NotNull(message = "Quantity should not be empty")
     private BigDecimal quantity;
     @NotEmpty(message = "Address should not be empty")
+    @Pattern(regexp = "\\d-\\d{2}-\\d{3}$")
     private String address;
 }

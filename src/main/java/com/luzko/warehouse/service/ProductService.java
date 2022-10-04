@@ -1,7 +1,7 @@
 package com.luzko.warehouse.service;
 
-import com.luzko.warehouse.dto.BlockProductDto;
-import com.luzko.warehouse.dto.BlockProductRequestDto;
+import com.luzko.warehouse.dto.BlockingDto;
+import com.luzko.warehouse.dto.BlockingRequestDto;
 import com.luzko.warehouse.dto.ProductRequestDto;
 import com.luzko.warehouse.dto.ProductResponseDto;
 import com.luzko.warehouse.mapper.BlockingMapper;
@@ -49,7 +49,7 @@ public class ProductService {
         Map<String, Product> productsToBeSaved = existingProducts.stream()
                 .collect(Collectors.toMap(Product::getProductCode, Function.identity()));
 
-        for (ProductRequestDto productRequestDto : productRequestDtos) {
+        productRequestDtos.forEach (productRequestDto -> {
             String productCode = productRequestDto.getProductCode();
             if (productsToBeSaved.containsKey(productCode)) {
                 Product product = productsToBeSaved.get(productCode);
@@ -58,22 +58,22 @@ public class ProductService {
             } else {
                 productsToBeSaved.put(productCode, productMapper.toProduct(productRequestDto));
             }
-        }
+        });
         List<Product> savedProducts = productRepository.saveAllAndFlush(productsToBeSaved.values());
         return savedProducts.stream()
                 .map(productMapper::toProductResponseDto)
                 .toList();
     }
 
-    public List<ProductResponseDto> departProducts (List<BlockProductRequestDto> blockProductRequestDtos) {
+    public List<ProductResponseDto> departProducts (List<BlockingRequestDto> blockingRequestDtos) {
         Set<Product> productsToBeUpdated = new HashSet<>();
         Set<Product> productsToBeDeleted = new HashSet<>();
-        Map<String, Map<Product, List<BlockProductDto>>> addressesToProductsToBlockProductDtos =
-                updateProductsBlockings(false, blockProductRequestDtos);
+        Map<String, Map<Product, List<BlockingDto>>> addressesToProductsToBlockingDtos =
+                updateProductsBlockings(false, blockingRequestDtos);
 
-        addressesToProductsToBlockProductDtos.forEach((address, productsToBlockProductDtos) -> {
-            productsToBlockProductDtos.forEach((product, blockProductDtos) -> {
-                BigDecimal requestedQuantity = blockProductDtos.stream().map(BlockProductDto::getBlockedQuantity)
+        addressesToProductsToBlockingDtos.forEach((address, productsToBlockingDtos) -> {
+            productsToBlockingDtos.forEach((product, blockingDtos) -> {
+                BigDecimal requestedQuantity = blockingDtos.stream().map(BlockingDto::getBlockedQuantity)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
                 product.setQuantity(product.getQuantity().subtract(requestedQuantity));
                 if (product.getQuantity().equals(BigDecimal.ZERO)) {
@@ -81,7 +81,7 @@ public class ProductService {
                 }
             });
             productsToBeUpdated.addAll(
-                    new HashSet<>(productsToBlockProductDtos.keySet()));
+                    new HashSet<>(productsToBlockingDtos.keySet()));
         });
         productRepository.saveAllAndFlush(productsToBeUpdated);
         productRepository.deleteAll(productsToBeDeleted);
@@ -89,32 +89,32 @@ public class ProductService {
     }
 
     public List<ProductResponseDto> updateProducts (boolean block,
-                                                    List<BlockProductRequestDto> blockProductRequestDtos) {
+                                                    List<BlockingRequestDto> blockingRequestDtos) {
         Set<Product> productsToBeUpdated = new HashSet<>();
-        Map<String, Map<Product, List<BlockProductDto>>> addressesToProductsToBlockProductDtos =
-                updateProductsBlockings(block, blockProductRequestDtos);
-        addressesToProductsToBlockProductDtos.forEach((address, productsToBlockProductDtos) ->
-                productsToBeUpdated.addAll(new HashSet<>(productsToBlockProductDtos.keySet())));
+        Map<String, Map<Product, List<BlockingDto>>> addressesToProductsToBlockingDtos =
+                updateProductsBlockings(block, blockingRequestDtos);
+        addressesToProductsToBlockingDtos.forEach((address, productsToBlockingDtos) ->
+                productsToBeUpdated.addAll(new HashSet<>(productsToBlockingDtos.keySet())));
         productRepository.saveAllAndFlush(productsToBeUpdated);
         return productsToBeUpdated.stream().map(productMapper::toProductResponseDto).toList();
     }
 
-    public Map<String, Map<Product, List<BlockProductDto>>> updateProductsBlockings(boolean block,
-                                                                                    List<BlockProductRequestDto>
-                                                                                            blockProductRequestDtos) {
-        Map<String, Map<String, List<BlockProductDto>>> addressesToProductCodesToBlockProductDtos =
-                blockProductRequestDtos.stream().collect(Collectors.groupingBy(
-                        BlockProductRequestDto::getAddress, Collectors.groupingBy(
-                                BlockProductRequestDto::getProductCode, Collectors.mapping(
-                                        BlockProductRequestDto::getBlockInfo, Collectors.toList()))));
+    private Map<String, Map<Product, List<BlockingDto>>> updateProductsBlockings(boolean block,
+                                                                                List<BlockingRequestDto>
+                                                                                        blockingRequestDtos) {
+        Map<String, Map<String, List<BlockingDto>>> addressesToProductCodesToBlockingDtos =
+                blockingRequestDtos.stream().collect(Collectors.groupingBy(
+                        BlockingRequestDto::getAddress, Collectors.groupingBy(
+                                BlockingRequestDto::getProductCode, Collectors.mapping(
+                                        BlockingRequestDto::getBlockingInfo, Collectors.toList()))));
 
         Set<Product> productsFoundByAddresses = productRepository.findAllByAddressIn(
-                addressesToProductCodesToBlockProductDtos.keySet());
+                addressesToProductCodesToBlockingDtos.keySet());
         Map<String, Set<Product>> addressesToFoundProducts = productsFoundByAddresses.stream()
                 .collect(Collectors.groupingBy(Product::getAddress, Collectors.toSet()));
 
-        checkAddresses(addressesToProductCodesToBlockProductDtos, addressesToFoundProducts);
-        checkProductCodesAtAddresses(addressesToProductCodesToBlockProductDtos, addressesToFoundProducts);
+        checkAddresses(addressesToProductCodesToBlockingDtos, addressesToFoundProducts);
+        checkProductCodesAtAddresses(addressesToProductCodesToBlockingDtos, addressesToFoundProducts);
 
         Map<String, Map<String, Product>> addressesToProductCodesToProducts = new HashMap<>();
         productsFoundByAddresses.forEach(product -> {
@@ -123,77 +123,77 @@ public class ProductService {
             addressesToProductCodesToProducts.get(address).put(product.getProductCode(), product);
         });
 
-        Map<String, Map<Product, List<BlockProductDto>>> addressesToProductsToBlockProductDtos = new HashMap<>();
-        addressesToProductCodesToBlockProductDtos.forEach((address, reqItems) -> {
+        Map<String, Map<Product, List<BlockingDto>>> addressesToProductsToBlockingDtos = new HashMap<>();
+        addressesToProductCodesToBlockingDtos.forEach((address, reqItems) -> {
             Map<String, Product> foundOnAddress = addressesToProductCodesToProducts.get(address);
-            reqItems.forEach((productCode, blockProductDtos) -> {
+            reqItems.forEach((productCode, blockingDtos) -> {
                 Product product = foundOnAddress.get(productCode);
-                addressesToProductsToBlockProductDtos.putIfAbsent(address, new HashMap<>());
-                addressesToProductsToBlockProductDtos.get(address).put(product, blockProductDtos);
+                addressesToProductsToBlockingDtos.putIfAbsent(address, new HashMap<>());
+                addressesToProductsToBlockingDtos.get(address).put(product, blockingDtos);
             });
         });
 
-        blockUnblockProducts(block, addressesToProductsToBlockProductDtos);
-        return addressesToProductsToBlockProductDtos;
+        blockUnblockProducts(block, addressesToProductsToBlockingDtos);
+        return addressesToProductsToBlockingDtos;
     }
 
     private void blockUnblockProducts (boolean block,
-                                       Map<String, Map<Product, List<BlockProductDto>>>
-                                               addressesToProductsToBlockProductDtos) {
-        for (Map.Entry<String, Map<Product, List<BlockProductDto>>> resultEntry :
-                addressesToProductsToBlockProductDtos.entrySet()) {
+                                       Map<String, Map<Product, List<BlockingDto>>>
+                                               addressesToProductsToBlockingDtos) {
+        for (Map.Entry<String, Map<Product, List<BlockingDto>>> resultEntry :
+                addressesToProductsToBlockingDtos.entrySet()) {
             String currentAddress = resultEntry.getKey();
-            for (Map.Entry<Product, List<BlockProductDto>> productToBlockingsEntry :
+            for (Map.Entry<Product, List<BlockingDto>> productToBlockingDtosEntry :
                     resultEntry.getValue().entrySet()) {
                 if (block) {
-                    blockProducts(productToBlockingsEntry, currentAddress);
+                    blockProducts(productToBlockingDtosEntry, currentAddress);
                 } else {
-                    unblockProducts(productToBlockingsEntry);
+                    unblockProducts(productToBlockingDtosEntry);
                 }
             }
         }
     }
 
-    private void blockProducts(Map.Entry<Product, List<BlockProductDto>> productToBlockingsEntry,
+    private void blockProducts(Map.Entry<Product, List<BlockingDto>> productToBlockingDtosEntry,
                                String currentAddress) {
-        Product currentProduct = productToBlockingsEntry.getKey();
+        Product currentProduct = productToBlockingDtosEntry.getKey();
         BigDecimal currentProductAvailableQuantity = getAvailableQuantity(currentProduct);
 
-        List<BlockProductDto> blockProductDtosForCurrentProduct =
-                productToBlockingsEntry.getValue();
-        for (BlockProductDto blockProductDto : blockProductDtosForCurrentProduct) {
-            if (blockProductDto.getBlockedQuantity().compareTo(currentProductAvailableQuantity) > 0) {
+        List<BlockingDto> blockingDtosForCurrentProduct =
+                productToBlockingDtosEntry.getValue();
+        for (BlockingDto blockingDto : blockingDtosForCurrentProduct) {
+            if (blockingDto.getBlockedQuantity().compareTo(currentProductAvailableQuantity) > 0) {
                 throw new WarehouseManagerException(
                         ErrorCode.NOT_ENOUGH_OF_PRODUCT, currentProduct.getProductCode(), currentAddress);
             }
             currentProductAvailableQuantity = currentProductAvailableQuantity
-                    .subtract(blockProductDto.getBlockedQuantity());
+                    .subtract(blockingDto.getBlockedQuantity());
             currentProduct.getBlockings().stream()
-                    .filter(blocking -> isBlockingTheSame(blocking, blockProductDto))
+                    .filter(blocking -> isBlockingTheSame(blocking, blockingDto))
                     .findFirst()
                     .ifPresentOrElse(blocking -> blocking.setBlockedQuantity(blocking.getBlockedQuantity()
-                                    .add(blockProductDto.getBlockedQuantity())),
-                            () -> blockingMapper.toBlocking(blockProductDto).attachToProduct(currentProduct));
+                                    .add(blockingDto.getBlockedQuantity())),
+                            () -> blockingMapper.toBlocking(blockingDto).attachToProduct(currentProduct));
         }
     }
 
-    private void unblockProducts(Map.Entry<Product, List<BlockProductDto>> productToBlockingsEntry) {
-        Product currentProduct = productToBlockingsEntry.getKey();
-        List<BlockProductDto> blockProductDtosForCurrentProduct =
-                productToBlockingsEntry.getValue();
-        for (BlockProductDto blockProductDto : blockProductDtosForCurrentProduct) {
+    private void unblockProducts(Map.Entry<Product, List<BlockingDto>> productToBlockingDtosEntry) {
+        Product currentProduct = productToBlockingDtosEntry.getKey();
+        List<BlockingDto> blockingDtosForCurrentProduct =
+                productToBlockingDtosEntry.getValue();
+        for (BlockingDto blockingDto : blockingDtosForCurrentProduct) {
             Blocking existingBlocking = currentProduct.getBlockings().stream()
-                    .filter(blocking -> isBlockingTheSame(blocking, blockProductDto))
+                    .filter(blocking -> isBlockingTheSame(blocking, blockingDto))
                     .findFirst().orElseThrow(() -> {
                         throw new WarehouseManagerException(
-                                ErrorCode.BLOCKING_NOT_FOUND, currentProduct, blockProductDto);
+                                ErrorCode.BLOCKING_NOT_FOUND, currentProduct, blockingDto);
                     });
 
-            BigDecimal requestedQuantity = blockProductDto.getBlockedQuantity();
+            BigDecimal requestedQuantity = blockingDto.getBlockedQuantity();
             BigDecimal currentQuantity = existingBlocking.getBlockedQuantity();
             if (currentQuantity.compareTo(requestedQuantity) < 0) {
                 throw new WarehouseManagerException(ErrorCode.BLOCKED_QUANTITY_IS_NOT_ENOUGH_FOR_UNBLOCKING,
-                        currentProduct, blockProductDto);
+                        currentProduct, blockingDto);
             } else if (currentQuantity.compareTo(requestedQuantity) > 0) {
                 existingBlocking.setBlockedQuantity(
                         existingBlocking.getBlockedQuantity().subtract(requestedQuantity));
@@ -203,10 +203,10 @@ public class ProductService {
         }
     }
 
-    private void checkAddresses(Map<String, Map<String, List<BlockProductDto>>>
-                                                   addressesToProductCodeToRequestBlockingsMap,
+    private void checkAddresses(Map<String, Map<String, List<BlockingDto>>>
+                                                   addressesToProductCodesToBlockingDtosMap,
                                 Map<String, Set<Product>> allProductsFoundByAddressesMap) {
-        addressesToProductCodeToRequestBlockingsMap.keySet().stream()
+        addressesToProductCodesToBlockingDtosMap.keySet().stream()
                 .filter(address -> !allProductsFoundByAddressesMap.containsKey(address))
                 .findFirst()
                 .ifPresent(notFoundAddress -> {
@@ -214,13 +214,13 @@ public class ProductService {
                 });
     }
 
-    private void checkProductCodesAtAddresses(Map<String, Map<String, List<BlockProductDto>>>
-                                                                 addressesToProductCodeToRequestBlockingsMap,
+    private void checkProductCodesAtAddresses(Map<String, Map<String, List<BlockingDto>>>
+                                                                 addressesToProductCodesToBlockingDtosMap,
                                               Map<String, Set<Product>> allProductsFoundByAddressesMap) {
-        addressesToProductCodeToRequestBlockingsMap.forEach((address, blockInfosByProductCode) -> {
+        addressesToProductCodesToBlockingDtosMap.forEach((address, blockingInfosByProductCode) -> {
             Map<String, Product> existingProductsAtAddress = allProductsFoundByAddressesMap.get(address).stream()
                     .collect(Collectors.toMap(Product::getProductCode, Function.identity()));
-            blockInfosByProductCode.forEach((productCode, blockInfos) -> {
+            blockingInfosByProductCode.forEach((productCode, blockInfos) -> {
                 if (!existingProductsAtAddress.containsKey(productCode)) {
                     throw new WarehouseManagerException(
                             ErrorCode.PRODUCT_CODE_NOT_FOUND_AT_ADDRESS, productCode, address);
@@ -229,9 +229,9 @@ public class ProductService {
         });
     }
 
-    private boolean isBlockingTheSame(Blocking blocking, BlockProductDto blockProductDto) {
-        return blocking.getBlockingReason().equals(blockProductDto.getBlockingReason())
-                && blocking.getBlockingToken().equals(blockProductDto.getBlockingToken());
+    private boolean isBlockingTheSame(Blocking blocking, BlockingDto blockingDto) {
+        return blocking.getBlockingReason().equals(blockingDto.getBlockingReason())
+                && blocking.getBlockingToken().equals(blockingDto.getBlockingToken());
     }
 
     private BigDecimal getAvailableQuantity(Product product) {

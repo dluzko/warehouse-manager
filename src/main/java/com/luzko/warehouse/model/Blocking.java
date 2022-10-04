@@ -15,14 +15,13 @@ public class Blocking {
     private String blockingToken;
     @Enumerated(EnumType.STRING)
     private BlockingReason blockingReason;
+    @Column(name = "product_id")
+    private Long productId;
     private BigDecimal blockedQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", referencedColumnName = "product_id", updatable = false, insertable = false)
     private Product product;
-
-    @Column(name = "product_id")
-    private Long productId;
 
     public void attachToProduct(final Product product) {
         if (product != null) {

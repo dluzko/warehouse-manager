@@ -19,69 +19,53 @@
         <org.mapstruct.version>1.4.2.Final</org.mapstruct.version>
     </properties>
     <dependencies>
-        <dependency> <!-- Spring Data JPA with Hibernate -->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        <dependency> <!-- starter for building web (incl. RESTful, Spring MVC). Uses Tomcat by default -->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <dependency> <!-- application.properties or application.yaml -->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <dependency> <!-- starter for using Java Bean Validation with Hibernate Validator -->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        <!--        <dependency>--> <!-- Kafka binder implementation -->
-        <!--            <groupId>org.springframework.cloud</groupId>-->
-        <!--            <artifactId>spring-cloud-stream-binder-kafka</artifactId>-->
-        <!--        </dependency>-->
-        <!--        <dependency>--> <!-- Spring Kafka Support -->
-        <!--            <groupId>org.springframework.kafka</groupId>-->
-        <!--            <artifactId>spring-kafka</artifactId>-->
-        <!--        </dependency>-->
-        <dependency> <!-- Automatic Resource Management, automatic generation of getters, setters, equals,
-        hashCode and toString, and more! -->
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <dependency> <!-- managing and executing database changes -->
+        <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
         </dependency>
-        <dependency> <!-- PostgreSQL JDBC Driver -->
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <dependency> <!-- An annotation processor for generating type-safe bean mappers (Mapping entities and DTOs) -->
+        <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${org.mapstruct.version}</version>
         </dependency>
-        <dependency> <!-- An annotation processor for generating type-safe bean mappers (Mapping entities and DTOs) -->
+        <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct-processor</artifactId>
             <version>${org.mapstruct.version}</version>
             <scope>provided</scope>
         </dependency>
         <!--test=-->
-        <dependency> <!-- Starter for testing Spring Boot applications (JUnit Jupiter, Hamcrest and Mockito) -->
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency> <!-- Messaging Microservices with Spring Integration (RabbitMQ Binder, Kafka Binder and so on) -->
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-stream</artifactId>
-            <scope>test</scope>
-            <classifier>test-binder</classifier>
-            <type>test-jar</type>
-        </dependency>
-        <dependency> <!-- Rich and fluent assertions for testing -->
+        <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
@@ -102,8 +86,7 @@
 
     <build>
         <plugins>
-            <plugin> <!-- package executable jar or war archives, run Spring Boot applications,
-            generate build information and start Spring Boot application prior to running integration tests -->
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
