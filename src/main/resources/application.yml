@@ -1,0 +1,21 @@
+server:
+  port: 10000
+
+spring:
+  jackson:
+    default-property-inclusion : NON_NULL
+  datasource:
+    url: jdbc:postgresql://localhost:5432/warehouse_manager
+    username: testuser
+    password: qwerty
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/db.changelog-master.xml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
